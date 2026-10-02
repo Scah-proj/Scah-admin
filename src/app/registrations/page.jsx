@@ -9,8 +9,8 @@ import {
   Search,
   UsersRound,
 } from "lucide-react";
-import { useGetAllAthletesQuery } from "../redux/api/athleteApi";
-import { useGetAllScoutsQuery } from "../redux/api/scoutApi";
+import { useGetAllRegistrationAthletesQuery } from "../redux/api/athleteApi";
+import { useGetAllRegistrationScoutsQuery } from "../redux/api/scoutApi";
 
 const PAGE_SIZE = 10;
 const SCOUT_COLOR = "#f26b3a";
@@ -23,13 +23,13 @@ export default function RegistrationsPage() {
     error: athleteError,
     isError: isAthleteError,
     isLoading: isAthleteLoading,
-  } = useGetAllAthletesQuery();
+  } = useGetAllRegistrationAthletesQuery();
   const {
     data: scoutResponse,
     error: scoutError,
     isError: isScoutError,
     isLoading: isScoutLoading,
-  } = useGetAllScoutsQuery();
+  } = useGetAllRegistrationScoutsQuery();
   const [query, setQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [newestFirst, setNewestFirst] = useState(true);

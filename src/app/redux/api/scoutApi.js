@@ -1,4 +1,5 @@
 import { baseApi } from "./baseurl";
+import { fetchAllPages } from "./fetchAllPages";
 
 export const scoutApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -21,8 +22,16 @@ export const scoutApi = baseApi.injectEndpoints({
       },
       providesTags: ["Scouts"],
     }),
+    getAllRegistrationScouts: builder.query({
+      queryFn: (_arg, _api, _extraOptions, baseQuery) =>
+        fetchAllPages(baseQuery, "/api/scouts", "scouts"),
+      providesTags: ["Scouts"],
+    }),
   }),
   overrideExisting: false,
 });
 
-export const { useGetAllScoutsQuery } = scoutApi;
+export const {
+  useGetAllScoutsQuery,
+  useGetAllRegistrationScoutsQuery,
+} = scoutApi;

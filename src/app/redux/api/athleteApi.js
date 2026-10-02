@@ -1,4 +1,5 @@
 import { baseApi } from "./baseurl";
+import { fetchAllPages } from "./fetchAllPages";
 
 export const athleteApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -25,8 +26,16 @@ export const athleteApi = baseApi.injectEndpoints({
       },
       providesTags: ["Athletes"],
     }),
+    getAllRegistrationAthletes: builder.query({
+      queryFn: (_arg, _api, _extraOptions, baseQuery) =>
+        fetchAllPages(baseQuery, "/api/athletes", "athletes"),
+      providesTags: ["Athletes"],
+    }),
   }),
   overrideExisting: false,
 });
 
-export const { useGetAllAthletesQuery } = athleteApi;
+export const {
+  useGetAllAthletesQuery,
+  useGetAllRegistrationAthletesQuery,
+} = athleteApi;
