@@ -9,6 +9,11 @@ const lato = Lato({
   weight: ["400", "700"],
 });
 
+const ADMIN_EMAILS = new Set([
+  "scah.club@gmail.com",
+  "oghoghenero0@gmail.com",
+]);
+
 type LoginResponse = {
   token?: string;
   accessToken?: string;
@@ -19,13 +24,59 @@ type LoginResponse = {
     accessToken?: string;
     user?: Record<string, unknown>;
     role?: string;
+    message?: unknown;
+    error?: unknown;
   };
-  message?: string;
-  error?: string;
+  message?: unknown;
+  error?: unknown;
 };
 
-const getErrorMessage = (body: LoginResponse, status: number) =>
-  body.message || body.error || `Sign in failed (${status}). Please try again.`;
+const getErrorMessage = (body: LoginResponse, status: number) => {
+  if (status === 401) return "Credentials wrong";
+  if (status === 403) return "Unauthorized";
+
+  const candidates = [
+    body.message,
+    body.error,
+    body.data?.message,
+    body.data?.error,
+  ];
+  const message = candidates
+    .map(getTextMessage)
+    .find((candidate) => candidate !== undefined);
+
+  if (typeof message !== "string") {
+    return "Unable to sign in. Please try again.";
+  }
+
+  if (/unauthori[sz]ed|forbidden|not allowed|access denied/i.test(message)) {
+    return "Unauthorized";
+  }
+  if (
+    /invalid credentials|incorrect credentials|wrong credentials|invalid email or password|email or password/i.test(
+      message,
+    )
+  ) {
+    return "Credentials wrong";
+  }
+
+  return message;
+};
+
+function getTextMessage(value: unknown): string | undefined {
+  if (typeof value === "string" && value.trim()) return value.trim();
+  if (!value || typeof value !== "object") return undefined;
+
+  const fields = value as Record<string, unknown>;
+  for (const key of ["message", "error", "detail"]) {
+    if (key in fields) {
+      const message = getTextMessage(fields[key]);
+      if (message) return message;
+    }
+  }
+
+  return undefined;
+}
 
 export default function Home() {
   const router = useRouter();
@@ -42,6 +93,12 @@ export default function Home() {
     const email = String(formData.get("email") ?? "").trim();
     const password = String(formData.get("password") ?? "");
     const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "");
+
+    if (!ADMIN_EMAILS.has(email.toLowerCase())) {
+      setError("Unauthorized");
+      setIsSubmitting(false);
+      return;
+    }
 
     if (!apiUrl) {
       setError("The API URL is not configured. Please contact your administrator.");
@@ -64,7 +121,10 @@ export default function Home() {
       const payload = body.data ?? body;
       const token = payload.token ?? payload.accessToken;
       if (!token) {
-        throw new Error(body.message || "The login response did not include an access token.");
+        throw new Error(
+          getTextMessage(body.message) ||
+            "The login response did not include an access token.",
+        );
       }
 
       localStorage.setItem("token", token);
