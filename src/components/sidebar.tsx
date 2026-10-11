@@ -5,10 +5,11 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import {
+  ClipboardList,
   CircleDot,
   LayoutGrid,
   LogOut,
-  Settings,
+  MessagesSquare,
   Trophy,
   Users,
 } from "lucide-react";
@@ -21,6 +22,8 @@ const links = [
   { href: "/registrations", label: "Registrations", icon: Users },
   { href: "/athletes", label: "Athletes", icon: CircleDot },
   { href: "/scouts", label: "Scouts", icon: Trophy },
+  { href: "/auditlog", label: "Audit log", icon: ClipboardList },
+  { href: "/chat-monitoring", label: "Chat monitoring", icon: MessagesSquare },
 ];
 
 type AdminProfile = {
