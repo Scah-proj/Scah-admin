@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Lato } from "next/font/google";
 
@@ -151,11 +152,16 @@ export default function Home() {
     <main className={`${lato.className} flex min-h-screen items-center justify-center bg-[#0b1220] px-4 py-10 text-[#f2f4f7]`}>
       <div className="w-full max-w-md">
         <div className="mb-7 flex items-center justify-center gap-3">
-          <span className="grid h-11 w-11 place-items-center rounded-xl bg-[#7ddc5a] text-xl font-bold text-[#0b1220]">
-            S
-          </span>
-          <span className="text-xl font-bold tracking-tight text-white">
-            SCAH <span className="text-[#a3acba]">Admin</span>
+          <Image
+            src="/run.png"
+            alt="SCAH"
+            width={40}
+            height={48}
+            className="h-12 w-10 object-contain"
+            priority
+          />
+          <span className="text-xl font-bold tracking-tight text-[#a3acba]">
+            Admin
           </span>
         </div>
 

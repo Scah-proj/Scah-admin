@@ -116,6 +116,8 @@ export const baseApi = createApi({
     "CoverPhoto",
     "Reports",
     "ReportedAccounts",
+    "Users",
+    "AdminAnalytics",
   ],
 
   endpoints: () => ({}),

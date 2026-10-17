@@ -4,11 +4,23 @@ import { useMemo, useState } from "react";
 import {
   ArrowDownUp,
   ChevronDown,
+  FileText,
   Search,
   UsersRound,
 } from "lucide-react";
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { useGetAllAthletesQuery } from "../redux/api/athleteApi";
 import { useGetAllScoutsQuery } from "../redux/api/scoutApi";
+import { useGetUserStatsQuery } from "../redux/api/userStatsApi";
+import { useGetAdminAnalyticsQuery } from "../redux/api/adminAnalyticsApi";
 
 const SCOUT_COLOR = "#f26b3a";
 const ATHLETE_COLOR = "#7ddc5a";
@@ -30,9 +42,24 @@ export default function OverviewPage() {
     isError: isScoutError,
     isLoading: isScoutLoading,
   } = useGetAllScoutsQuery({ page: 1, limit: 5 });
+  const {
+    currentData: userStats,
+    error: statsError,
+    isError: isStatsError,
+    isLoading: isStatsLoading,
+  } = useGetUserStatsQuery();
   const [query, setQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [newestFirst, setNewestFirst] = useState(true);
+  const [analyticsDays, setAnalyticsDays] = useState(30);
+  const {
+    currentData: analytics,
+    error: analyticsError,
+    isError: isAnalyticsError,
+    isFetching: isAnalyticsFetching,
+    isLoading: isAnalyticsLoading,
+    refetch: refetchAnalytics,
+  } = useGetAdminAnalyticsQuery(analyticsDays);
 
   const scoutProfiles = scoutResponse?.scouts ?? EMPTY_PROFILES;
   const scouts = scoutResponse?.total ?? scoutProfiles.length;
@@ -122,7 +149,7 @@ export default function OverviewPage() {
         </div>
       </header>
 
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Stat
           label="Total signups"
           value={loading ? "…" : error ? "—" : total}
@@ -141,6 +168,51 @@ export default function OverviewPage() {
           color={ATHLETE_COLOR}
           sub={!loading && !error ? `${pct(athletes)}% of total` : "Athlete profiles"}
         />
+        <Stat
+          label="Total posts"
+          value={isStatsLoading ? "…" : isStatsError ? "—" : (userStats?.totalPosts ?? 0).toLocaleString()}
+          color="#8bb8ff"
+          sub={isStatsError ? getErrorMessage(statsError) : "Active, non-deleted posts"}
+          icon={<FileText size={18} />}
+        />
+      </section>
+
+      <section className="space-y-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="mb-1 text-xs font-bold uppercase tracking-[0.16em] text-[#8bb8ff]">Platform activity</p>
+            <h2 className="text-xl font-bold text-white">Analytics</h2>
+            <p className="mt-1 text-xs text-[#8e98a7]">Daily values use UTC dates.</p>
+          </div>
+          <label className="flex items-center gap-2 text-sm text-[#a3acba]">Date range
+            <select value={analyticsDays} onChange={(event) => setAnalyticsDays(Number(event.target.value))} className="rounded-lg border border-white/10 bg-[#171c24] px-3 py-2 text-sm text-white">
+              <option value={7}>Last 7 days</option><option value={30}>Last 30 days</option><option value={90}>Last 90 days</option>
+            </select>
+          </label>
+        </div>
+        {isAnalyticsLoading ? <div className={`${card} p-8 text-center text-sm text-[#9aa4b2]`}>Loading analytics…</div> : isAnalyticsError ? <div className={`${card} flex flex-wrap items-center justify-between gap-3 p-5`}><p className="text-sm text-red-200">{getErrorMessage(analyticsError)}</p><button onClick={() => refetchAnalytics()} className="rounded-lg border border-white/10 px-3 py-2 text-sm text-white hover:bg-white/[0.05]">Try again</button></div> : analytics?.daily?.length ? <>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <PeriodTotal label="New users" value={analytics.totals.newUsers} color="#7ddc5a" />
+            <PeriodTotal label="Posts created" value={analytics.totals.postsCreated} color="#8bb8ff" />
+            <PeriodTotal label="Interactions" value={sumInteractions(analytics.totals.interactions)} color="#ffad8c" />
+            <PeriodTotal label="Active users" value={analytics.totals.activeUsers} color="#c2a6ff" />
+          </div>
+          {analytics.daily.length > 0 && analytics.daily.every((item) => Number(item.activeUsers) === 0) && (
+            <div className="flex flex-col gap-3 rounded-xl border border-white/[0.08] bg-white/[0.025] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-[#a3acba]">
+                {analyticsDays < 90
+                  ? "No daily active users were recorded for this range. Try the 90-day range."
+                  : "Daily active users are still zero over 90 days. The backend may not have recorded activity for this period."}
+              </p>
+              {analyticsDays < 90 && <button onClick={() => setAnalyticsDays(90)} className="shrink-0 rounded-lg border border-white/10 px-3 py-2 text-sm font-semibold text-white hover:bg-white/[0.05]">Load 90 days</button>}
+            </div>
+          )}
+          {isAnalyticsFetching && <p className="text-right text-xs text-[#8e98a7]">Updating…</p>}
+          <div className="grid gap-5 xl:grid-cols-2">
+            <AnalyticsChart title="Daily users" data={analytics.daily} series={[{ key: "activeUsers", label: "Active users", color: "#8bb8ff" }, { key: "newUsers", label: "New users", color: "#7ddc5a" }]} />
+            <AnalyticsChart title="Daily interactions" data={analytics.daily} series={[{ key: "likes", label: "Likes", color: "#ffad8c" }, { key: "comments", label: "Comments", color: "#8bb8ff" }, { key: "saves", label: "Saves", color: "#c2a6ff" }, { key: "reposts", label: "Reposts", color: "#7ddc5a" }]} />
+          </div>
+        </> : <div className={`${card} p-8 text-center text-sm text-[#9aa4b2]`}>No analytics data for this period.</div>}
       </section>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(280px,0.8fr)_minmax(0,2fr)]">
@@ -350,7 +422,7 @@ function getErrorMessage(error) {
   return "Could not load signups. Please try again.";
 }
 
-function Stat({ label, value, color, sub }) {
+function Stat({ label, value, color, sub, icon }) {
   return (
     <div className={`${card} flex items-center justify-between gap-4 p-5 sm:p-6`}>
       <div>
@@ -364,14 +436,74 @@ function Stat({ label, value, color, sub }) {
         className="grid h-11 w-11 shrink-0 place-items-center rounded-xl"
         style={{ color, backgroundColor: `${color}18` }}
       >
-        {label === "Total signups" ? (
+        {icon || (label === "Total signups" ? (
           <UsersRound size={19} />
         ) : (
           <span className="h-2.5 w-2.5 rounded-full" style={{ background: color }} />
-        )}
+        ))}
       </span>
     </div>
   );
+}
+
+function PeriodTotal({ label, value, color }) {
+  return (
+    <div className={`${card} p-4`}>
+      <p className="text-xs font-medium text-[#8e98a7]">{label}</p>
+      <p className="mt-2 text-2xl font-bold text-white">{typeof value === "number" ? value.toLocaleString() : "—"}</p>
+      <span className="mt-2 block h-1 w-8 rounded-full" style={{ backgroundColor: color }} />
+    </div>
+  );
+}
+
+function AnalyticsChart({ title, data, series }) {
+  const chartData = data.map((item) => ({
+    ...item,
+    ...Object.fromEntries(series.map((line) => [line.key, Number(item[line.key] ?? item.interactions?.[line.key]) || 0])),
+  }));
+
+  return (
+    <section className={`${card} min-w-0 p-4 sm:p-5`}>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <h3 className="font-bold text-white">{title}</h3>
+        <div className="flex flex-wrap gap-x-3 gap-y-1.5">
+          {series.map((line) => <span key={line.key} className="inline-flex items-center gap-1.5 text-[11px] text-[#a3acba]"><span className="h-2 w-2 rounded-full" style={{ background: line.color }} />{line.label}</span>)}
+        </div>
+      </div>
+      <div className="h-[260px] w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={chartData} margin={{ top: 8, right: 12, bottom: 4, left: -12 }}>
+            <CartesianGrid stroke="rgba(255,255,255,0.08)" strokeDasharray="3 5" vertical={false} />
+            <XAxis dataKey="date" tickFormatter={formatAnalyticsAxis} interval={Math.max(0, Math.ceil(chartData.length / 7) - 1)} tick={{ fill: "#8e98a7", fontSize: 10 }} axisLine={{ stroke: "rgba(255,255,255,0.12)" }} tickLine={false} minTickGap={12} />
+            <YAxis allowDecimals={false} width={38} tick={{ fill: "#8e98a7", fontSize: 10 }} axisLine={false} tickLine={false} />
+            <Tooltip labelFormatter={formatAnalyticsTooltip} formatter={(value, name) => [Number(value).toLocaleString(), name]} contentStyle={{ background: "#171c24", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 12, color: "#f4f6f8" }} labelStyle={{ color: "#c3cad4", marginBottom: 6 }} itemStyle={{ padding: 0 }} />
+            {series.map((line) => <Line key={line.key} type="monotone" dataKey={line.key} name={line.label} stroke={line.color} strokeWidth={2.5} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />)}
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    </section>
+  );
+}
+
+function formatAnalyticsAxis(value) {
+  const date = parseUtcDate(value);
+  return date ? date.toLocaleDateString("en-US", { weekday: "short", month: "short", timeZone: "UTC" }) : value;
+}
+
+function formatAnalyticsTooltip(value) {
+  const date = parseUtcDate(value);
+  return date ? date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: "UTC" }) : value;
+}
+
+function parseUtcDate(value) {
+  if (typeof value !== "string") return null;
+  const date = new Date(`${value.slice(0, 10)}T00:00:00Z`);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function sumInteractions(interactions) {
+  if (!interactions) return undefined;
+  return [interactions.likes, interactions.comments, interactions.saves, interactions.reposts].reduce((sum, value) => sum + (Number(value) || 0), 0);
 }
 
 function Legend({ color, label, value }) {

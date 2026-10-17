@@ -2,6 +2,7 @@
 
 import { useMemo, useSyncExternalStore } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import {
@@ -103,10 +104,14 @@ export default function Sidebar() {
   return (
     <aside className="flex w-full shrink-0 flex-col border-b border-white/[0.07] px-3.5 py-5 md:sticky md:top-0 md:h-screen md:w-[240px] md:border-b-0 md:border-r">
       <div className="flex items-center gap-2.5 px-2 pb-6">
-        <span className="grid h-[30px] w-[30px] place-items-center rounded-lg bg-[#f26b3a] text-[15px] font-bold text-white">
-          S
-        </span>
-        <span className="text-[19px] font-bold tracking-tight">SCAH Admin</span>
+        <Image
+          src="/run.png"
+          alt="SCAH"
+          width={30}
+          height={36}
+          className="h-9 w-[30px] object-contain"
+        />
+        <span className="text-[19px] font-bold tracking-tight">Admin</span>
       </div>
 
       <nav
