@@ -114,6 +114,8 @@ export const baseApi = createApi({
     "Gallery",
     "Media",
     "CoverPhoto",
+    "Reports",
+    "ReportedAccounts",
   ],
 
   endpoints: () => ({}),

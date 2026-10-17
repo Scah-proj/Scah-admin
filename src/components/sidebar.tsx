@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import {
   ClipboardList,
+  Flag,
   CircleDot,
   LayoutGrid,
   LogOut,
@@ -24,6 +25,7 @@ const links = [
   { href: "/scouts", label: "Scouts", icon: Trophy },
   { href: "/auditlog", label: "Audit log", icon: ClipboardList },
   { href: "/chat-monitoring", label: "Chat monitoring", icon: MessagesSquare },
+  { href: "/account-reports", label: "Account reports", icon: Flag },
 ];
 
 type AdminProfile = {
