@@ -25,7 +25,7 @@ export const authApi = baseApi.injectEndpoints({
       query: (data) => ({
         url: "api/auth/login/verify-2fa",
         method: "POST",
-        body: data, 
+        body: data,
       }),
     }),
 
@@ -56,7 +56,7 @@ export const authApi = baseApi.injectEndpoints({
       }),
     }),
 
-    // Check Onboarding Status
+
     getOnboardingStatus: builder.query({
       query: () => ({
         url: "api/auth/onboarding-status",
