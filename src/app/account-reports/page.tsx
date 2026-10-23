@@ -35,11 +35,12 @@ export default function AccountReportsPage() {
   const totalPages = Math.max(1, pagination.totalPages ?? pagination.pages ?? 1);
   const total = pagination.totalResults ?? pagination.total ?? reports.length;
   const selected = reports.find((report) => reportKey(report) === selectedId) ?? null;
-  const account = getPerson(selected?.reportedUser ?? selected?.reportedAccount ?? selected?.reported);
-  const userId = account?.userId ?? account?._id ?? account?.id ?? (typeof (selected?.reportedUser ?? selected?.reportedAccount ?? selected?.reported) === "string" ? selected?.reportedUser ?? selected?.reportedAccount ?? selected?.reported as string : "");
+  const reportedAccount = selected?.reportedUser ?? selected?.reportedAccount ?? selected?.reported;
+  const account = getPerson(reportedAccount);
+  const userId = account?.userId ?? account?._id ?? account?.id ?? (typeof reportedAccount === "string" ? reportedAccount : "");
   const profileQuery = useGetReportedAccountProfileQuery(userId, { skip: !userId });
   const postsQuery = useGetReportedAccountPostsQuery({ userId, page: 1, limit: 20 }, { skip: !userId });
-  const profile = profileQuery.currentData?.profile ?? profileQuery.currentData?.user ?? profileQuery.currentData;
+  const profile = (profileQuery.currentData?.profile ?? profileQuery.currentData?.user ?? profileQuery.currentData) as (Person & { role?: string; accountType?: string; isBanned?: boolean; banUntil?: string; banReason?: string }) | undefined;
   const posts = postsQuery.currentData?.posts ?? postsQuery.currentData?.items ?? postsQuery.currentData?.data?.posts ?? (Array.isArray(postsQuery.currentData?.data) ? postsQuery.currentData.data : []);
   const busy = resolveState.isLoading || banState.isLoading || unbanState.isLoading;
   const requestError = isError ? errorText(error) : "";
