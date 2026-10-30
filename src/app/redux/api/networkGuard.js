@@ -1,4 +1,4 @@
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 const OFFLINE_MESSAGE = "You're offline. Check your internet connection.";
 const ONLINE_MESSAGE = "You're back online.";
