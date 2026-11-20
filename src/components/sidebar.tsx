@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
@@ -11,7 +11,9 @@ import {
   CircleDot,
   LayoutGrid,
   LogOut,
+  Menu,
   MessagesSquare,
+  X,
   Trophy,
   Users,
 } from "lucide-react";
@@ -55,6 +57,7 @@ export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const dispatch = useDispatch();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const storedUserJson = useSyncExternalStore(
     subscribeToStoredUser,
     getStoredUserSnapshot,
@@ -66,6 +69,10 @@ export default function Sidebar() {
   );
   const adminUser = storedUser;
   const [requestLogout, { isLoading: isLoggingOut }] = useLogoutMutation();
+
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
 
   const isActive = (href: string) =>
     href === "/admin" ? pathname === href : pathname.startsWith(href);
@@ -102,7 +109,32 @@ export default function Sidebar() {
     .toUpperCase();
 
   return (
-    <aside className="flex w-full shrink-0 flex-col border-b border-white/[0.07] px-3.5 py-5 md:sticky md:top-0 md:h-screen md:w-[240px] md:border-b-0 md:border-r">
+    <>
+      <div className="flex items-center justify-between border-b border-white/[0.07] px-4 py-3 md:hidden">
+        <div className="flex items-center gap-2.5">
+          <Image src="/run.png" alt="SCAH" width={25} height={30} className="h-[30px] w-[25px] object-contain" />
+          <span className="text-[18px] font-bold tracking-tight">Admin</span>
+        </div>
+        <button
+          type="button"
+          aria-label={isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+          aria-expanded={isMobileMenuOpen}
+          aria-controls="admin-navigation"
+          onClick={() => setIsMobileMenuOpen((open) => !open)}
+          className="grid h-10 w-10 place-items-center rounded-lg text-[#f2f4f7] hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-[#f26b3a]"
+        >
+          {isMobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+        </button>
+      </div>
+      {isMobileMenuOpen && (
+        <button
+          type="button"
+          aria-label="Close navigation menu"
+          onClick={() => setIsMobileMenuOpen(false)}
+          className="fixed inset-0 z-40 bg-black/60 md:hidden"
+        />
+      )}
+      <aside id="admin-navigation" className={`fixed inset-y-0 left-0 z-50 flex w-[280px] shrink-0 flex-col border-r border-white/[0.07] bg-[#10151d] px-3.5 py-5 transition-transform duration-200 md:sticky md:top-0 md:h-screen md:w-[240px] md:translate-x-0 md:border-r ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}>
       <div className="flex items-center gap-2.5 px-2 pb-6">
         <Image
           src="/run.png"
@@ -116,7 +148,7 @@ export default function Sidebar() {
 
       <nav
         aria-label="Main"
-        className="flex gap-1.5 overflow-x-auto md:flex-col"
+        className="flex flex-col gap-1.5 overflow-y-auto"
       >
         {links.map(({ href, label, icon: Icon }) => {
           const active = isActive(href);
@@ -138,7 +170,7 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div className="mt-5 border-t border-white/[0.07] pt-4 md:mt-auto">
+      <div className="mt-auto border-t border-white/[0.07] pt-4">
         <div className="mb-3 flex min-w-0 items-center gap-3 px-2">
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[#f26b3a]/25 bg-[#f26b3a]/10 text-xs font-bold tracking-wide text-[#ffad8c]">
             {adminInitials || "A"}
@@ -163,7 +195,8 @@ export default function Sidebar() {
           <span>{isLoggingOut ? "Logging out…" : "Log out"}</span>
         </button>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }
 
