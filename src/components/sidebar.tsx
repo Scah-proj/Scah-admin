@@ -110,7 +110,7 @@ export default function Sidebar() {
 
   return (
     <>
-      <div className="flex items-center justify-between border-b border-white/[0.07] px-4 py-3 md:hidden">
+      <div className="fixed inset-x-0 top-0 z-30 flex h-14 items-center justify-between border-b border-white/[0.07] bg-[#10151d] px-4 py-3 md:hidden">
         <div className="flex items-center gap-2.5">
           <Image src="/run.png" alt="SCAH" width={25} height={30} className="h-[30px] w-[25px] object-contain" />
           <span className="text-[18px] font-bold tracking-tight">Admin</span>
@@ -126,6 +126,7 @@ export default function Sidebar() {
           {isMobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
       </div>
+      <div className="h-14 shrink-0 md:hidden" aria-hidden="true" />
       {isMobileMenuOpen && (
         <button
           type="button"
